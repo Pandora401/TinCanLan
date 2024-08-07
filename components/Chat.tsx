@@ -4,7 +4,8 @@ import CryptoJS from 'crypto-js';
 import ChatInput from './ChatInput';
 import Config from './config';
 
-const ENCRYPT_KEY = process.env.NEXT_PUBLIC_ENCRYPT_SECRET_KEY as string;
+// Define your encryption key and max message length
+const ENCRYPT_KEY = "some_secret"
 const MAX_MESSAGE_LENGTH = 100;
 
 interface Message {
@@ -72,7 +73,10 @@ const Chat: React.FC = () => {
   };
 
   const handleHostServer = () => {
-    alert('Starting server on port 8080...');
+    // Placeholder function to start a new server
+    // This is where you might call an API or start a server process
+    alert('Starting server...');
+    // Set your local server IP for testing purposes
     const localIp = 'http://localhost:8080';
     localStorage.setItem('webSocketIp', localIp);
     handleSaveConfig(localIp);
@@ -111,20 +115,9 @@ const Chat: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full p-4">
-      {/* Header Area */}
-      <div className="flex-1 overflow-y-auto mb-16">
-        <div className="text-white mb-4"><strong>Your Alias:</strong> {userName}</div>
-      </div>
-      {/* Input Box */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black border-t border-gray-700">
-        <ChatInput
-          message={message}
-          onChange={e => setMessage(e.target.value)}
-          onSend={sendMessage}
-        />
-      </div>
       {/* Message Area */}
       <div className="flex-1 overflow-y-auto mb-16">
+        <div className="text-white mb-4"><strong>Your Alias:</strong> {userName}</div>
         <div>
           {messages.map((msg, index) => (
             <div
@@ -140,6 +133,15 @@ const Chat: React.FC = () => {
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Input Box */}
+      <div className="fixed bottom-0 left-0 right-0 p-4 bg-black border-t border-gray-700">
+        <ChatInput
+          message={message}
+          onChange={e => setMessage(e.target.value)}
+          onSend={sendMessage}
+        />
       </div>
     </div>
   );
