@@ -12,8 +12,10 @@ const Config: React.FC<ConfigProps> = ({ onSave, onHost, onBack }) => {
 
   const handleSave = () => {
     if (ip) {
-      localStorage.setItem('webSocketIp', ip);
-      onSave(ip);
+      const ipAddress = ip.split(':')[0];
+      const fullIp = `${ipAddress}:8080`;
+      localStorage.setItem('webSocketIp', fullIp);
+      onSave(fullIp);
     }
   };
 
@@ -29,14 +31,14 @@ const Config: React.FC<ConfigProps> = ({ onSave, onHost, onBack }) => {
 
   return (
     <div className="flex flex-col items-center justify-center h-full">
-      <h1 className="text-2xl mb-4">Configure WebSocket</h1>
+      <h1 className="text-2xl mb-4">Lobby</h1>
       <button onClick={handleBack} className="mb-4 px-4 py-2 bg-gray-500 text-white rounded">
         Back
       </button>
       {!isHosting ? (
         <>
           <button onClick={handleHost} className="mb-4 px-4 py-2 bg-blue-500 text-white rounded">
-            Host Your Own Server
+            Start Hosting
           </button>
           <div className="mb-4">
             <input
@@ -47,7 +49,7 @@ const Config: React.FC<ConfigProps> = ({ onSave, onHost, onBack }) => {
               className="border border-gray-300 px-4 py-2 rounded"
             />
             <button onClick={handleSave} className="ml-2 px-4 py-2 bg-green-500 text-white rounded">
-              Connect
+              Connect to Existing Host
             </button>
           </div>
         </>

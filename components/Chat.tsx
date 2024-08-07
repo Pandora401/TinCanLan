@@ -2,10 +2,9 @@ import React, { useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import CryptoJS from 'crypto-js';
 import ChatInput from './ChatInput';
-import Config from './config';
+import Config from './Config';
 
-// Define your encryption key and max message length
-const ENCRYPT_KEY = "some_secret"
+const ENCRYPT_KEY = "some_secret";
 const MAX_MESSAGE_LENGTH = 100;
 
 interface Message {
@@ -73,17 +72,22 @@ const Chat: React.FC = () => {
   };
 
   const handleHostServer = () => {
-    // Placeholder function to start a new server
-    // This is where you might call an API or start a server process
     alert('Starting server...');
-    // Set your local server IP for testing purposes
     const localIp = 'http://localhost:8080';
     localStorage.setItem('webSocketIp', localIp);
     handleSaveConfig(localIp);
   };
 
   const handleBack = () => {
+    disconnectSocket(); // Disconnect WebSocket
     setShowConfig(true);
+  };
+
+  const disconnectSocket = () => {
+    if (socket) {
+      socket.disconnect();
+      setSocket(null);
+    }
   };
 
   const sendMessage = () => {
@@ -115,6 +119,14 @@ const Chat: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full p-4">
+      {/* Back Button */}
+      <button
+        onClick={handleBack}
+        className="mb-4 px-4 py-2 bg-gray-500 text-white rounded w-min"
+      >
+        Back
+      </button>
+
       {/* Message Area */}
       <div className="flex-1 overflow-y-auto mb-16">
         <div className="text-white mb-4"><strong>Your Alias:</strong> {userName}</div>
@@ -124,11 +136,11 @@ const Chat: React.FC = () => {
               key={index}
               onMouseEnter={() => handleMouseEnter(index)}
               onMouseLeave={handleMouseLeave}
-              className="mb-2 text-white"
+              className={`mb-2 ${hoveredMessageIndex === index ? 'text-white' : 'text-teal-400'}`}
             >
-              <strong>{msg.userName}:</strong> 
+              <strong>{msg.userName}:</strong>
               <span>
-                {msg.decryptedMessage}
+                {hoveredMessageIndex === index ? msg.decryptedMessage : getMessageDisplay(msg.encryptedMessage)}
               </span>
             </div>
           ))}
@@ -141,6 +153,7 @@ const Chat: React.FC = () => {
           message={message}
           onChange={e => setMessage(e.target.value)}
           onSend={sendMessage}
+          maxLength={MAX_MESSAGE_LENGTH}
         />
       </div>
     </div>
