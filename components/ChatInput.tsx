@@ -7,6 +7,7 @@ interface ChatInputProps {
   onSend: () => void;
 }
 
+
 const ChatInput: React.FC<ChatInputProps> = ({ message, onChange, onSend }) => {
   return (
     <div className="flex items-center">
