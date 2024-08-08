@@ -23,9 +23,8 @@ const Chat: React.FC = () => {
   const [socket, setSocket] = useState<any>(null);
   const [showConfig, setShowConfig] = useState<boolean>(false);
   const [alwaysDecrypt, setAlwaysDecrypt] = useState<boolean>(false);
-  const [decryptAll, setDecryptAll] = useState<boolean>(false); // New state
+  const [decryptAll, setDecryptAll] = useState<boolean>(false);
 
-  // Ref to store the interval ID
   const decryptionIntervals = useRef<Map<number, NodeJS.Timeout>>(new Map());
 
   useEffect(() => {
@@ -86,7 +85,7 @@ const Chat: React.FC = () => {
   };
 
   const handleBack = () => {
-    disconnectSocket(); // Disconnect WebSocket
+    disconnectSocket();
     setShowConfig(true);
   };
 
@@ -123,7 +122,6 @@ const Chat: React.FC = () => {
     if (messages[index]) {
       const { encryptedMessage, decryptedMessage } = messages[index];
 
-      // Check if decryptedMessage is defined
       if (decryptedMessage === undefined) {
         console.error('Decrypted message is undefined.');
         return;
@@ -131,7 +129,6 @@ const Chat: React.FC = () => {
 
       let charIndex = 0;
 
-      // Clear previous interval if it exists
       if (decryptionIntervals.current.has(index)) {
         clearInterval(decryptionIntervals.current.get(index)!);
       }
@@ -139,7 +136,7 @@ const Chat: React.FC = () => {
       const interval = setInterval(() => {
         if (charIndex >= decryptedMessage.length) {
           clearInterval(interval);
-          decryptionIntervals.current.delete(index); // Clean up
+          decryptionIntervals.current.delete(index);
         } else {
           let newDisplay = '';
           for (let i = 0; i < decryptedMessage.length; i++) {
@@ -154,35 +151,23 @@ const Chat: React.FC = () => {
         }
       }, DECRYPTION_STEP_DELAY);
 
-      // Store the interval ID
       decryptionIntervals.current.set(index, interval);
     }
   };
 
   const resetMessage = () => {
     if (hoveredMessageIndex !== null) {
-      // Clear any existing decryption interval
       if (decryptionIntervals.current.has(hoveredMessageIndex)) {
         clearInterval(decryptionIntervals.current.get(hoveredMessageIndex)!);
         decryptionIntervals.current.delete(hoveredMessageIndex);
       }
 
-      // Reset the message to its encrypted state
       setMessages(prev =>
         prev.map((msg, i) =>
           i === hoveredMessageIndex ? { ...msg, encryptedMessage: msg.originalEncryptedMessage! } : msg
         )
       );
     }
-  };
-
-  const getMessageDisplay = (msg: string, index: number) => {
-    if (alwaysDecrypt || decryptAll) {
-      return msg;
-    }
-    return hoveredMessageIndex === index
-      ? `${msg}`
-      : `${msg.length > MAX_MESSAGE_LENGTH ? `${msg.slice(0, MAX_MESSAGE_LENGTH)}...` : msg}`;
   };
 
   const toggleDecryptionMode = () => {
@@ -194,7 +179,6 @@ const Chat: React.FC = () => {
     setDecryptAll(prev => {
       const newValue = !prev;
       if (newValue) {
-        // Decrypt all messages
         setMessages(prevMessages =>
           prevMessages.map(msg => {
             const bytes = CryptoJS.AES.decrypt(msg.encryptedMessage, ENCRYPT_KEY);
@@ -203,7 +187,6 @@ const Chat: React.FC = () => {
           })
         );
       } else {
-        // Encrypt all messages back
         setMessages(prevMessages =>
           prevMessages.map(msg => ({
             ...msg,
@@ -223,37 +206,30 @@ const Chat: React.FC = () => {
   return (
     <div className="flex flex-col h-full p-4">
       <div className='flex'>
-        {/* Back Button */}
         <button
           onClick={handleBack}
           className="mb-4 mr-4 px-4 py-2 bg-red-500 text-white rounded w-min border-2 border-red-500 bg-opacity-15 hover:bg-opacity-30"
         >
           Back
         </button>
-
-        {/* Decrypt All Button */}
         <button
           onClick={toggleDecryptAll}
           className="mb-4 mr-4 px-4 py-2 bg-yellow-500 text-white rounded w-min border-2 border-yellow-500 bg-opacity-15 hover:bg-opacity-30"
         >
           {decryptAll ? 'Decrypted' : 'Encrypted'}
         </button>
-
-
-        {/* Toggle Decryption Mode Button */}
         <button
           onClick={toggleDecryptionMode}
           className={
-            ! decryptAll 
+            !decryptAll 
             ? `mb-4 mr-4 px-4 py-2 bg-teal-500 text-white rounded w-min border-2 border-teal-500 bg-opacity-15 hover:bg-opacity-30` 
-            : `mb-4 mr-4 px-4 py-2 bg-gray-500 text-white rounded w-min border-2 border-gray-700 bg-opacity-15 hover:bg-opacity-30`
+            : `mb-4 mr-4 px-4 py-2 bg-gray-500 text-white rounded w-min border-2 border-gray-700 bg-opacity-15`
           }
           disabled={decryptAll}
         >
           {alwaysDecrypt ? 'Locked' : 'Unlocked'}
         </button>
       </div>
-      {/* Message Area */}
       <div className="flex-1 overflow-y-auto mb-16">
         <div className="text-white mb-4"><strong>Whoami:</strong> {userName}</div>
         <div>
@@ -262,18 +238,17 @@ const Chat: React.FC = () => {
               key={index}
               onMouseEnter={() => handleMouseEnter(index)}
               onMouseLeave={handleMouseLeave}
-              className="mb-2"
+              className="mb-4 mr-4 px-4 py-2 bg-gray-800 rounded border-2 border-gray-800 bg-opacity-20 hover:bg-opacity-25"
+              style={{ maxWidth: '100%', overflow: 'hidden', whiteSpace: 'pre-wrap' }}
             >
-              <strong className='mr-4 text-white'>{msg.userName}</strong>
-              <span className={`${hoveredMessageIndex === index ? 'text-white' : 'text-teal-400'}`}>
-                {getMessageDisplay(msg.encryptedMessage, index)}
-              </span>
+              <div className="text-white font-bold mb-1">{msg.userName}</div>
+              <div className={`${hoveredMessageIndex === index ? 'text-white' : 'text-teal-400'}`}>
+                {msg.encryptedMessage}
+              </div>
             </div>
           ))}
         </div>
       </div>
-
-      {/* Input Box */}
       <div className="fixed bottom-0 left-0 right-0 p-4 bg-black border-t border-gray-700">
         <ChatInput
           message={message}

@@ -16,6 +16,7 @@ const names = [
 ];
 
 const assignedNames = new Set();
+const connectedUsers = new Map();
 
 const getUniqueName = () => {
   let name;
@@ -29,13 +30,10 @@ const getUniqueName = () => {
 io.on('connection', (socket) => {
   console.log('Client connected');
   
-  // Get IP address
-  const ipAddress = socket.request.connection.remoteAddress || 'unknown';
-  console.log(`Client IP address: ${ipAddress}`);
-
   const userName = getUniqueName();
-  console.log(`User assigned name: ${userName}`);
-
+  connectedUsers.set(socket.id, userName);
+  io.emit('updateUsers', Array.from(connectedUsers.values()));
+  
   socket.emit('assignName', userName);
 
   socket.on('message', (encryptedMessage) => {
@@ -44,8 +42,9 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
-    // Remove user name from the set when disconnected
-    assignedNames.delete(userName);
+    assignedNames.delete(connectedUsers.get(socket.id));
+    connectedUsers.delete(socket.id);
+    io.emit('updateUsers', Array.from(connectedUsers.values()));
   });
 });
 
