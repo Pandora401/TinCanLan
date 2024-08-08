@@ -217,7 +217,7 @@ const Chat: React.FC = () => {
   };
 
   if (showConfig) {
-    return <Config onSave={handleSaveConfig} onHost={handleHostServer}/>;
+    return <Config onSave={handleSaveConfig} onHost={handleHostServer} />;
   }
 
   return (
@@ -231,21 +231,21 @@ const Chat: React.FC = () => {
           Back
         </button>
 
-        {/* Toggle Decryption Mode Button */}
-        <button
-          onClick={toggleDecryptionMode}
-          className="mb-4 mr-4 px-4 py-2 bg-teal-500 text-white rounded w-min"
-        >
-          {alwaysDecrypt ? 'Locked' : 'Unlocked'}
-        </button>
-
         {/* Decrypt All Button */}
         <button
           onClick={toggleDecryptAll}
-          className="mb-4 px-4 py-2 bg-yellow-500 text-white rounded w-min"
+          className="mb-4 mr-4 px-4 py-2 bg-yellow-500 text-white rounded w-min"
         >
           {decryptAll ? 'Encrypted' : 'Decrypted'}
         </button>
+
+        {/* Toggle Decryption Mode Button */}
+        {!decryptAll && <button
+          onClick={toggleDecryptionMode}
+          className="mb-4 px-4 py-2 bg-teal-500 text-white rounded w-min"
+        >
+          {alwaysDecrypt ? 'Locked' : 'Unlocked'}
+        </button>}
       </div>
       {/* Message Area */}
       <div className="flex-1 overflow-y-auto mb-16">
