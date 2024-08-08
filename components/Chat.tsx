@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import CryptoJS from 'crypto-js';
 import ChatInput from './ChatInput';
@@ -6,11 +6,13 @@ import Config from './Config';
 
 const ENCRYPT_KEY = "some_secret";
 const MAX_MESSAGE_LENGTH = 100;
+const DECRYPTION_STEP_DELAY = 25;
 
 interface Message {
   encryptedMessage: string;
   userName: string;
   decryptedMessage?: string;
+  originalEncryptedMessage?: string;
 }
 
 const Chat: React.FC = () => {
@@ -20,6 +22,9 @@ const Chat: React.FC = () => {
   const [hoveredMessageIndex, setHoveredMessageIndex] = useState<number | null>(null);
   const [socket, setSocket] = useState<any>(null);
   const [showConfig, setShowConfig] = useState<boolean>(false);
+
+  // Ref to store the interval ID
+  const decryptionIntervals = useRef<Map<number, NodeJS.Timeout>>(new Map());
 
   useEffect(() => {
     const ip = localStorage.getItem('webSocketIp');
@@ -35,7 +40,7 @@ const Chat: React.FC = () => {
         try {
           const bytes = CryptoJS.AES.decrypt(data.encryptedMessage, ENCRYPT_KEY);
           const decryptedMessage = bytes.toString(CryptoJS.enc.Utf8);
-          setMessages(prev => [...prev, { ...data, decryptedMessage }]);
+          setMessages(prev => [...prev, { ...data, decryptedMessage, originalEncryptedMessage: data.encryptedMessage }]);
         } catch (error) {
           console.error('Failed to decrypt message:', error);
         }
@@ -64,7 +69,7 @@ const Chat: React.FC = () => {
       try {
         const bytes = CryptoJS.AES.decrypt(data.encryptedMessage, ENCRYPT_KEY);
         const decryptedMessage = bytes.toString(CryptoJS.enc.Utf8);
-        setMessages(prev => [...prev, { ...data, decryptedMessage }]);
+        setMessages(prev => [...prev, { ...data, decryptedMessage, originalEncryptedMessage: data.encryptedMessage }]);
       } catch (error) {
         console.error('Failed to decrypt message:', error);
       }
@@ -100,17 +105,75 @@ const Chat: React.FC = () => {
 
   const handleMouseEnter = (index: number) => {
     setHoveredMessageIndex(index);
+    startDecryptionAnimation(index);
   };
 
   const handleMouseLeave = () => {
     setHoveredMessageIndex(null);
+    resetMessage();
   };
 
-  const getMessageDisplay = (msg: string) => {
-    if (msg.length > MAX_MESSAGE_LENGTH) {
-      return `${msg.slice(0, MAX_MESSAGE_LENGTH)}...`;
+  const startDecryptionAnimation = (index: number) => {
+    if (messages[index]) {
+      const { encryptedMessage, decryptedMessage } = messages[index];
+
+      // Check if decryptedMessage is defined
+      if (decryptedMessage === undefined) {
+        console.error('Decrypted message is undefined.');
+        return;
+      }
+
+      let charIndex = 0;
+
+      // Clear previous interval if it exists
+      if (decryptionIntervals.current.has(index)) {
+        clearInterval(decryptionIntervals.current.get(index)!);
+      }
+
+      const interval = setInterval(() => {
+        if (charIndex >= decryptedMessage.length) {
+          clearInterval(interval);
+          decryptionIntervals.current.delete(index); // Clean up
+        } else {
+          let newDisplay = '';
+          for (let i = 0; i < decryptedMessage.length; i++) {
+            newDisplay += i <= charIndex ? decryptedMessage[i] : encryptedMessage[i];
+          }
+          setMessages(prev =>
+            prev.map((msg, i) =>
+              i === index ? { ...msg, encryptedMessage: newDisplay } : msg
+            )
+          );
+          charIndex++;
+        }
+      }, DECRYPTION_STEP_DELAY);
+
+      // Store the interval ID
+      decryptionIntervals.current.set(index, interval);
     }
-    return msg;
+  };
+
+  const resetMessage = () => {
+    if (hoveredMessageIndex !== null) {
+      // Clear any existing decryption interval
+      if (decryptionIntervals.current.has(hoveredMessageIndex)) {
+        clearInterval(decryptionIntervals.current.get(hoveredMessageIndex)!);
+        decryptionIntervals.current.delete(hoveredMessageIndex);
+      }
+
+      // Reset the message to its encrypted state
+      setMessages(prev =>
+        prev.map((msg, i) =>
+          i === hoveredMessageIndex ? { ...msg, encryptedMessage: msg.originalEncryptedMessage! } : msg
+        )
+      );
+    }
+  };
+
+  const getMessageDisplay = (msg: string, index: number) => {
+    return hoveredMessageIndex === index
+      ? `${msg}`
+      : `${msg.length > MAX_MESSAGE_LENGTH ? `${msg.slice(0, MAX_MESSAGE_LENGTH)}...` : msg}`;
   };
 
   if (showConfig) {
@@ -136,11 +199,11 @@ const Chat: React.FC = () => {
               key={index}
               onMouseEnter={() => handleMouseEnter(index)}
               onMouseLeave={handleMouseLeave}
-              className={`mb-2`}
+              className="mb-2"
             >
               <strong className='mr-4'>{msg.userName}</strong>
               <span className={`${hoveredMessageIndex === index ? 'text-white' : 'text-teal-400'}`}>
-                {hoveredMessageIndex === index ? msg.decryptedMessage : getMessageDisplay(msg.encryptedMessage)}
+                {getMessageDisplay(msg.encryptedMessage, index)}
               </span>
             </div>
           ))}

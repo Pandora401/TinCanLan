@@ -12,7 +12,7 @@ const io = socketIo(server, {
 
 const names = [
   'Jian Yang', 'Phat Phuk', 'Dr. Loving', 'Filthy Frank',
-  'Glucos', 'Septic Tank', ':/', 'Dirt'
+  'Glucos', 'Septic Tank', ':/', 'Dirt', 'Batman', 'Old Gregg'
 ];
 
 const assignedNames = new Set();
