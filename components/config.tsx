@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 interface ConfigProps {
   onSave: (ip: string) => void;
   onHost: () => void;
-  onBack: () => void;
 }
 
 const Config: React.FC<ConfigProps> = ({ onSave, onHost }) => {

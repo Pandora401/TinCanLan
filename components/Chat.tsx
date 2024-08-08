@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import CryptoJS from 'crypto-js';
 import ChatInput from './ChatInput';
-import Config from './config';
+import Config from './Config';
 
 const ENCRYPT_KEY = "some_secret";
 const MAX_MESSAGE_LENGTH = 125;
