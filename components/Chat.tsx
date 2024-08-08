@@ -2,10 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import io from 'socket.io-client';
 import CryptoJS from 'crypto-js';
 import ChatInput from './ChatInput';
-import Config from './Config';
+import Config from './config';
 
 const ENCRYPT_KEY = "some_secret";
-const MAX_MESSAGE_LENGTH = 100;
+const MAX_MESSAGE_LENGTH = 125;
 const DECRYPTION_STEP_DELAY = 25;
 
 interface Message {
@@ -22,6 +22,7 @@ const Chat: React.FC = () => {
   const [hoveredMessageIndex, setHoveredMessageIndex] = useState<number | null>(null);
   const [socket, setSocket] = useState<any>(null);
   const [showConfig, setShowConfig] = useState<boolean>(false);
+  const [alwaysDecrypt, setAlwaysDecrypt] = useState<boolean>(false);
 
   // Ref to store the interval ID
   const decryptionIntervals = useRef<Map<number, NodeJS.Timeout>>(new Map());
@@ -104,13 +105,17 @@ const Chat: React.FC = () => {
   };
 
   const handleMouseEnter = (index: number) => {
-    setHoveredMessageIndex(index);
-    startDecryptionAnimation(index);
+    if (!alwaysDecrypt) {
+      setHoveredMessageIndex(index);
+      startDecryptionAnimation(index);
+    }
   };
 
   const handleMouseLeave = () => {
-    setHoveredMessageIndex(null);
-    resetMessage();
+    if (!alwaysDecrypt) {
+      setHoveredMessageIndex(null);
+      resetMessage();
+    }
   };
 
   const startDecryptionAnimation = (index: number) => {
@@ -171,25 +176,41 @@ const Chat: React.FC = () => {
   };
 
   const getMessageDisplay = (msg: string, index: number) => {
+    if (alwaysDecrypt) {
+      return msg;
+    }
     return hoveredMessageIndex === index
       ? `${msg}`
       : `${msg.length > MAX_MESSAGE_LENGTH ? `${msg.slice(0, MAX_MESSAGE_LENGTH)}...` : msg}`;
   };
 
+  const toggleDecryptionMode = () => {
+    setAlwaysDecrypt(prev => !prev);
+  };
+
   if (showConfig) {
-    return <Config onSave={handleSaveConfig} onHost={handleHostServer} onBack={handleBack} />;
+    return <Config onSave={handleSaveConfig} onHost={handleHostServer}/>;
   }
 
   return (
     <div className="flex flex-col h-full p-4">
+      <div className='flex'>
       {/* Back Button */}
       <button
         onClick={handleBack}
-        className="mb-4 px-4 py-2 bg-red-500 text-white rounded w-min"
+        className="mb-4 mr-4 px-4 py-2 bg-red-500 text-white rounded w-min"
       >
         Back
       </button>
 
+      {/* Toggle Decryption Mode Button */}
+      <button
+        onClick={toggleDecryptionMode}
+        className="mb-4 px-4 py-2 bg-teal-500 text-white rounded w-min"
+      >
+        {alwaysDecrypt ? 'Locked' : 'Unlocked'}
+      </button>
+      </div>
       {/* Message Area */}
       <div className="flex-1 overflow-y-auto mb-16">
         <div className="text-white mb-4"><strong>Whoami:</strong> {userName}</div>
@@ -201,7 +222,7 @@ const Chat: React.FC = () => {
               onMouseLeave={handleMouseLeave}
               className="mb-2"
             >
-              <strong className='mr-4'>{msg.userName}</strong>
+              <strong className='mr-4 text-white'>{msg.userName}</strong>
               <span className={`${hoveredMessageIndex === index ? 'text-white' : 'text-teal-400'}`}>
                 {getMessageDisplay(msg.encryptedMessage, index)}
               </span>
