@@ -122,24 +122,24 @@ const Chat: React.FC = () => {
       {/* Back Button */}
       <button
         onClick={handleBack}
-        className="mb-4 px-4 py-2 bg-gray-500 text-white rounded w-min"
+        className="mb-4 px-4 py-2 bg-red-500 text-white rounded w-min"
       >
         Back
       </button>
 
       {/* Message Area */}
       <div className="flex-1 overflow-y-auto mb-16">
-        <div className="text-white mb-4"><strong>Your Alias:</strong> {userName}</div>
+        <div className="text-white mb-4"><strong>Whoami:</strong> {userName}</div>
         <div>
           {messages.map((msg, index) => (
             <div
               key={index}
               onMouseEnter={() => handleMouseEnter(index)}
               onMouseLeave={handleMouseLeave}
-              className={`mb-2 ${hoveredMessageIndex === index ? 'text-white' : 'text-teal-400'}`}
+              className={`mb-2`}
             >
-              <strong>{msg.userName}:</strong>
-              <span>
+              <strong className='mr-4'>{msg.userName}</strong>
+              <span className={`${hoveredMessageIndex === index ? 'text-white' : 'text-teal-400'}`}>
                 {hoveredMessageIndex === index ? msg.decryptedMessage : getMessageDisplay(msg.encryptedMessage)}
               </span>
             </div>
