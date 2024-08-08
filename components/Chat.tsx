@@ -226,7 +226,7 @@ const Chat: React.FC = () => {
         {/* Back Button */}
         <button
           onClick={handleBack}
-          className="mb-4 mr-4 px-4 py-2 bg-red-500 text-white rounded w-min"
+          className="mb-4 mr-4 px-4 py-2 bg-red-500 text-white rounded w-min border-2 border-red-500 bg-opacity-15 hover:bg-opacity-30"
         >
           Back
         </button>
@@ -234,18 +234,24 @@ const Chat: React.FC = () => {
         {/* Decrypt All Button */}
         <button
           onClick={toggleDecryptAll}
-          className="mb-4 mr-4 px-4 py-2 bg-yellow-500 text-white rounded w-min"
+          className="mb-4 mr-4 px-4 py-2 bg-yellow-500 text-white rounded w-min border-2 border-yellow-500 bg-opacity-15 hover:bg-opacity-30"
         >
           {decryptAll ? 'Decrypted' : 'Encrypted'}
         </button>
 
+
         {/* Toggle Decryption Mode Button */}
-        {!decryptAll && <button
+        <button
           onClick={toggleDecryptionMode}
-          className="mb-4 px-4 py-2 bg-teal-500 text-white rounded w-min"
+          className={
+            ! decryptAll 
+            ? `mb-4 mr-4 px-4 py-2 bg-teal-500 text-white rounded w-min border-2 border-teal-500 bg-opacity-15 hover:bg-opacity-30` 
+            : `mb-4 mr-4 px-4 py-2 bg-gray-500 text-white rounded w-min border-2 border-gray-700 bg-opacity-15 hover:bg-opacity-30`
+          }
+          disabled={decryptAll}
         >
           {alwaysDecrypt ? 'Locked' : 'Unlocked'}
-        </button>}
+        </button>
       </div>
       {/* Message Area */}
       <div className="flex-1 overflow-y-auto mb-16">
