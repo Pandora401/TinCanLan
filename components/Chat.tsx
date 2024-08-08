@@ -236,7 +236,7 @@ const Chat: React.FC = () => {
           onClick={toggleDecryptAll}
           className="mb-4 mr-4 px-4 py-2 bg-yellow-500 text-white rounded w-min"
         >
-          {decryptAll ? 'Encrypted' : 'Decrypted'}
+          {decryptAll ? 'Decrypted' : 'Encrypted'}
         </button>
 
         {/* Toggle Decryption Mode Button */}
