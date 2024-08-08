@@ -15,15 +15,25 @@ const names = [
   'Glucos', 'Septic Tank', ':/', 'Dirt'
 ];
 
-const getRandomName = () => {
-  const randomIndex = Math.floor(Math.random() * names.length);
-  return names[randomIndex];
+const assignedNames = new Set();
+
+const getUniqueName = () => {
+  let name;
+  do {
+    name = names[Math.floor(Math.random() * names.length)];
+  } while (assignedNames.has(name));
+  assignedNames.add(name);
+  return name;
 };
 
 io.on('connection', (socket) => {
   console.log('Client connected');
+  
+  // Get IP address
+  const ipAddress = socket.request.connection.remoteAddress || 'unknown';
+  console.log(`Client IP address: ${ipAddress}`);
 
-  const userName = getRandomName();
+  const userName = getUniqueName();
   console.log(`User assigned name: ${userName}`);
 
   socket.emit('assignName', userName);
@@ -34,6 +44,8 @@ io.on('connection', (socket) => {
 
   socket.on('disconnect', () => {
     console.log('Client disconnected');
+    // Remove user name from the set when disconnected
+    assignedNames.delete(userName);
   });
 });
 
