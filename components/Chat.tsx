@@ -23,6 +23,7 @@ const Chat: React.FC = () => {
   const [socket, setSocket] = useState<any>(null);
   const [showConfig, setShowConfig] = useState<boolean>(false);
   const [alwaysDecrypt, setAlwaysDecrypt] = useState<boolean>(false);
+  const [decryptAll, setDecryptAll] = useState<boolean>(false); // New state
 
   // Ref to store the interval ID
   const decryptionIntervals = useRef<Map<number, NodeJS.Timeout>>(new Map());
@@ -105,14 +106,14 @@ const Chat: React.FC = () => {
   };
 
   const handleMouseEnter = (index: number) => {
-    if (!alwaysDecrypt) {
+    if (!alwaysDecrypt && !decryptAll) {
       setHoveredMessageIndex(index);
       startDecryptionAnimation(index);
     }
   };
 
   const handleMouseLeave = () => {
-    if (!alwaysDecrypt) {
+    if (!alwaysDecrypt && !decryptAll) {
       setHoveredMessageIndex(null);
       resetMessage();
     }
@@ -176,7 +177,7 @@ const Chat: React.FC = () => {
   };
 
   const getMessageDisplay = (msg: string, index: number) => {
-    if (alwaysDecrypt) {
+    if (alwaysDecrypt || decryptAll) {
       return msg;
     }
     return hoveredMessageIndex === index
@@ -186,6 +187,33 @@ const Chat: React.FC = () => {
 
   const toggleDecryptionMode = () => {
     setAlwaysDecrypt(prev => !prev);
+    setDecryptAll(false);
+  };
+
+  const toggleDecryptAll = () => {
+    setDecryptAll(prev => {
+      const newValue = !prev;
+      if (newValue) {
+        // Decrypt all messages
+        setMessages(prevMessages =>
+          prevMessages.map(msg => {
+            const bytes = CryptoJS.AES.decrypt(msg.encryptedMessage, ENCRYPT_KEY);
+            const decryptedMessage = bytes.toString(CryptoJS.enc.Utf8);
+            return { ...msg, decryptedMessage, encryptedMessage: decryptedMessage };
+          })
+        );
+      } else {
+        // Encrypt all messages back
+        setMessages(prevMessages =>
+          prevMessages.map(msg => ({
+            ...msg,
+            encryptedMessage: msg.originalEncryptedMessage!
+          }))
+        );
+      }
+      return newValue;
+    });
+    setAlwaysDecrypt(false);
   };
 
   if (showConfig) {
@@ -195,21 +223,29 @@ const Chat: React.FC = () => {
   return (
     <div className="flex flex-col h-full p-4">
       <div className='flex'>
-      {/* Back Button */}
-      <button
-        onClick={handleBack}
-        className="mb-4 mr-4 px-4 py-2 bg-red-500 text-white rounded w-min"
-      >
-        Back
-      </button>
+        {/* Back Button */}
+        <button
+          onClick={handleBack}
+          className="mb-4 mr-4 px-4 py-2 bg-red-500 text-white rounded w-min"
+        >
+          Back
+        </button>
 
-      {/* Toggle Decryption Mode Button */}
-      <button
-        onClick={toggleDecryptionMode}
-        className="mb-4 px-4 py-2 bg-teal-500 text-white rounded w-min"
-      >
-        {alwaysDecrypt ? 'Locked' : 'Unlocked'}
-      </button>
+        {/* Toggle Decryption Mode Button */}
+        <button
+          onClick={toggleDecryptionMode}
+          className="mb-4 mr-4 px-4 py-2 bg-teal-500 text-white rounded w-min"
+        >
+          {alwaysDecrypt ? 'Locked' : 'Unlocked'}
+        </button>
+
+        {/* Decrypt All Button */}
+        <button
+          onClick={toggleDecryptAll}
+          className="mb-4 px-4 py-2 bg-yellow-500 text-white rounded w-min"
+        >
+          {decryptAll ? 'Encrypted' : 'Decrypted'}
+        </button>
       </div>
       {/* Message Area */}
       <div className="flex-1 overflow-y-auto mb-16">
