@@ -6,7 +6,6 @@ import Config from './Config';
 
 const ENCRYPT_KEY = "some_secret";
 const MAX_MESSAGE_LENGTH = 125;
-const DECRYPTION_STEP_DELAY = 25;
 
 interface Message {
   encryptedMessage: string;
@@ -118,42 +117,70 @@ const Chat: React.FC = () => {
     }
   };
 
+  // Inspired by the following project:
+  // https://codepen.io/Hyperplexed/pen/rNrJgrd
   const startDecryptionAnimation = (index: number) => {
     if (messages[index]) {
       const { encryptedMessage, decryptedMessage } = messages[index];
-
+  
       if (decryptedMessage === undefined) {
         console.error('Decrypted message is undefined.');
         return;
       }
-
+  
       let charIndex = 0;
-
+      let iteration = 0;
+      const letters = "abcdefghijklmnopqrstuvwxyz1234567890";
+      
+      // interval duration
+      const INTERVAL_DURATION = 30;
+      // increment rate
+      const INCREMENT_RATE = 1;
+  
       if (decryptionIntervals.current.has(index)) {
         clearInterval(decryptionIntervals.current.get(index)!);
       }
-
+  
       const interval = setInterval(() => {
-        if (charIndex >= decryptedMessage.length) {
+        setMessages(prev =>
+          prev.map((msg, i) =>
+            i === index
+              ? {
+                  ...msg,
+                  encryptedMessage: msg.encryptedMessage
+                    .split("")
+                    .map((letter, idx) => {
+                      if (idx < charIndex) {
+                        return decryptedMessage[idx];
+                      }
+  
+                      return letters[Math.floor(Math.random() * 26)];
+                    })
+                    .join("")
+                }
+              : msg
+          )
+        );
+  
+        iteration += INCREMENT_RATE;
+        if (iteration >= decryptedMessage.length) {
           clearInterval(interval);
           decryptionIntervals.current.delete(index);
-        } else {
-          let newDisplay = '';
-          for (let i = 0; i < decryptedMessage.length; i++) {
-            newDisplay += i <= charIndex ? decryptedMessage[i] : encryptedMessage[i];
-          }
           setMessages(prev =>
             prev.map((msg, i) =>
-              i === index ? { ...msg, encryptedMessage: newDisplay } : msg
+              i === index ? { ...msg, encryptedMessage: decryptedMessage } : msg
             )
           );
-          charIndex++;
+        } else {
+          charIndex = Math.floor(iteration);
         }
-      }, DECRYPTION_STEP_DELAY);
-
+      }, INTERVAL_DURATION);
+  
       decryptionIntervals.current.set(index, interval);
     }
   };
+  
+  
 
   const resetMessage = () => {
     if (hoveredMessageIndex !== null) {
